@@ -1,12 +1,22 @@
-import {Node, NodeType, Mark, MarkType, ContentMatch, Slice, Fragment, NodeRange, Attrs} from "prosemirror-model"
+import {
+  Node,
+  NodeType,
+  Mark,
+  MarkType,
+  ContentMatch,
+  Slice,
+  Fragment,
+  NodeRange,
+  Attrs
+} from 'prosemirror-model'
 
-import {Mapping} from "./map"
-import {Step} from "./step"
-import {addMark, removeMark, clearIncompatible} from "./mark"
-import {replaceStep, replaceRange, replaceRangeWith, deleteRange} from "./replace"
-import {lift, wrap, setBlockType, setNodeMarkup, split, join} from "./structure"
-import {AttrStep, DocAttrStep} from "./attr_step"
-import {AddNodeMarkStep, RemoveNodeMarkStep} from "./mark_step"
+import { Mapping } from './map'
+import { Step } from './step'
+import { addMark, removeMark, clearIncompatible } from './mark'
+import { replaceStep, replaceRange, replaceRangeWith, deleteRange } from './replace'
+import { lift, wrap, setBlockType, setNodeMarkup, split, join } from './structure'
+import { AttrStep, DocAttrStep } from './attr_step'
+import { AddNodeMarkStep, RemoveNodeMarkStep } from './mark_step'
 
 /// @internal
 export let TransformError = class extends Error {}
@@ -19,7 +29,7 @@ TransformError = function TransformError(this: any, message: string) {
 
 TransformError.prototype = Object.create(Error.prototype)
 TransformError.prototype.constructor = TransformError
-TransformError.prototype.name = "TransformError"
+TransformError.prototype.name = 'TransformError'
 
 /// Abstraction to build up and track an array of
 /// [steps](#transform.Step) representing a document transformation.
@@ -32,7 +42,7 @@ export class Transform {
   /// The documents before each of the steps.
   readonly docs: Node[] = []
   /// A mapping with the maps for each of the steps in this transform.
-  readonly mapping: Mapping = new Mapping
+  readonly mapping: Mapping = new Mapping()
 
   /// Create a transform that starts with the given document.
   constructor(
@@ -42,7 +52,9 @@ export class Transform {
   ) {}
 
   /// The starting document.
-  get before() { return this.docs.length ? this.docs[0] : this.doc }
+  get before() {
+    return this.docs.length ? this.docs[0] : this.doc
+  }
 
   /// Apply a new step in this transform, saving the result. Throws an
   /// error when the step fails.
@@ -159,21 +171,31 @@ export class Transform {
   /// Wrap the given [range](#model.NodeRange) in the given set of wrappers.
   /// The wrappers are assumed to be valid in this position, and should
   /// probably be computed with [`findWrapping`](#transform.findWrapping).
-  wrap(range: NodeRange, wrappers: readonly {type: NodeType, attrs?: Attrs | null}[]): this {
+  wrap(range: NodeRange, wrappers: readonly { type: NodeType; attrs?: Attrs | null }[]): this {
     wrap(this, range, wrappers)
     return this
   }
 
   /// Set the type of all textblocks (partly) between `from` and `to` to
   /// the given node type with the given attributes.
-  setBlockType(from: number, to = from, type: NodeType, attrs: Attrs | null | ((oldNode: Node) => Attrs) = null): this {
+  setBlockType(
+    from: number,
+    to = from,
+    type: NodeType,
+    attrs: Attrs | null | ((oldNode: Node) => Attrs) = null
+  ): this {
     setBlockType(this, from, to, type, attrs)
     return this
   }
 
   /// Change the type, attributes, and/or marks of the node at `pos`.
   /// When `type` isn't given, the existing node type is preserved,
-  setNodeMarkup(pos: number, type?: NodeType | null, attrs: Attrs | null = null, marks?: readonly Mark[]): this {
+  setNodeMarkup(
+    pos: number,
+    type?: NodeType | null,
+    attrs: Attrs | null = null,
+    marks?: readonly Mark[]
+  ): this {
     setNodeMarkup(this, pos, type, attrs, marks)
     return this
   }
@@ -202,12 +224,14 @@ export class Transform {
   /// position `pos`.
   removeNodeMark(pos: number, mark: Mark | MarkType): this {
     let node = this.doc.nodeAt(pos)
-    if (!node) throw new RangeError("No node at position " + pos)
+    if (!node) throw new RangeError('No node at position ' + pos)
     if (mark instanceof Mark) {
       if (mark.isInSet(node.marks)) this.step(new RemoveNodeMarkStep(pos, mark))
     } else {
-      let set = node.marks, found, steps: Step[] = []
-      while (found = mark.isInSet(set)) {
+      let set = node.marks,
+        found,
+        steps: Step[] = []
+      while ((found = mark.isInSet(set))) {
         steps.push(new RemoveNodeMarkStep(pos, found))
         set = found.removeFromSet(set)
       }
@@ -221,7 +245,7 @@ export class Transform {
   /// parts split off will inherit the node type of the original node.
   /// This can be changed by passing an array of types and attributes to
   /// use after the split (with the outermost nodes coming first).
-  split(pos: number, depth = 1, typesAfter?: (null | {type: NodeType, attrs?: Attrs | null})[]) {
+  split(pos: number, depth = 1, typesAfter?: (null | { type: NodeType; attrs?: Attrs | null })[]) {
     split(this, pos, depth, typesAfter)
     return this
   }

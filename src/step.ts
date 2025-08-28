@@ -1,8 +1,9 @@
-import {ReplaceError, Schema, Slice, Node} from "prosemirror-model"
+import { ReplaceError, Schema, Slice, Node } from 'prosemirror-model'
 
-import {StepMap, Mappable} from "./map"
+import { StepMap, Mappable } from './map'
 
-const stepsByID: {[id: string]: {fromJSON(schema: Schema, json: any): Step}} = Object.create(null)
+const stepsByID: { [id: string]: { fromJSON(schema: Schema, json: any): Step } } =
+  Object.create(null)
 
 /// A step object represents an atomic change. It generally applies
 /// only to the document it was created for, since the positions
@@ -23,7 +24,9 @@ export abstract class Step {
   /// Get the step map that represents the changes made by this step,
   /// and which can be used to transform between positions in the old
   /// and the new document.
-  getMap(): StepMap { return StepMap.empty }
+  getMap(): StepMap {
+    return StepMap.empty
+  }
 
   /// Create an inverted version of this step. Needs the document as it
   /// was before the step as argument.
@@ -37,7 +40,9 @@ export abstract class Step {
   /// Try to merge this step with another one, to be applied directly
   /// after it. Returns the merged step when possible, null if the
   /// steps can't be merged.
-  merge(other: Step): Step | null { return null }
+  merge(other: Step): Step | null {
+    return null
+  }
 
   /// Create a JSON-serializeable representation of this step. When
   /// defining this for a custom subclass, make sure the result object
@@ -48,7 +53,7 @@ export abstract class Step {
   /// Deserialize a step from its JSON representation. Will call
   /// through to the step class' own implementation of this method.
   static fromJSON(schema: Schema, json: any): Step {
-    if (!json || !json.stepType) throw new RangeError("Invalid input for Step.fromJSON")
+    if (!json || !json.stepType) throw new RangeError('Invalid input for Step.fromJSON')
     let type = stepsByID[json.stepType]
     if (!type) throw new RangeError(`No step type ${json.stepType} defined`)
     return type.fromJSON(schema, json)
@@ -58,8 +63,8 @@ export abstract class Step {
   /// ID to attach to its JSON representation. Use this method to
   /// register an ID for your step classes. Try to pick something
   /// that's unlikely to clash with steps from other modules.
-  static jsonID(id: string, stepClass: {fromJSON(schema: Schema, json: any): Step}) {
-    if (id in stepsByID) throw new RangeError("Duplicate use of step JSON ID " + id)
+  static jsonID(id: string, stepClass: { fromJSON(schema: Schema, json: any): Step }) {
+    if (id in stepsByID) throw new RangeError('Duplicate use of step JSON ID ' + id)
     stepsByID[id] = stepClass
     ;(stepClass as any).prototype.jsonID = id
     return stepClass
@@ -78,10 +83,14 @@ export class StepResult {
   ) {}
 
   /// Create a successful step result.
-  static ok(doc: Node) { return new StepResult(doc, null) }
+  static ok(doc: Node) {
+    return new StepResult(doc, null)
+  }
 
   /// Create a failed step result.
-  static fail(message: string) { return new StepResult(null, message) }
+  static fail(message: string) {
+    return new StepResult(null, message)
+  }
 
   /// Call [`Node.replace`](#model.Node.replace) with the given
   /// arguments. Create a successful result if it succeeds, and a

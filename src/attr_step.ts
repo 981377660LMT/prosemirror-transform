@@ -1,6 +1,6 @@
-import {Fragment, Slice, Node, Schema} from "prosemirror-model"
-import {Step, StepResult} from "./step"
-import {StepMap, Mappable} from "./map"
+import { Fragment, Slice, Node, Schema } from 'prosemirror-model'
+import { Step, StepResult } from './step'
+import { StepMap, Mappable } from './map'
 
 /// Update an attribute in a specific node.
 export class AttrStep extends Step {
@@ -23,7 +23,12 @@ export class AttrStep extends Step {
     for (let name in node.attrs) attrs[name] = node.attrs[name]
     attrs[this.attr] = this.value
     let updated = node.type.create(attrs, null, node.marks)
-    return StepResult.fromReplace(doc, this.pos, this.pos + 1, new Slice(Fragment.from(updated), 0, node.isLeaf ? 0 : 1))
+    return StepResult.fromReplace(
+      doc,
+      this.pos,
+      this.pos + 1,
+      new Slice(Fragment.from(updated), 0, node.isLeaf ? 0 : 1)
+    )
   }
 
   getMap() {
@@ -40,17 +45,17 @@ export class AttrStep extends Step {
   }
 
   toJSON(): any {
-    return {stepType: "attr", pos: this.pos, attr: this.attr, value: this.value}
+    return { stepType: 'attr', pos: this.pos, attr: this.attr, value: this.value }
   }
 
   static fromJSON(schema: Schema, json: any) {
-    if (typeof json.pos != "number" || typeof json.attr != "string")
-      throw new RangeError("Invalid input for AttrStep.fromJSON")
+    if (typeof json.pos != 'number' || typeof json.attr != 'string')
+      throw new RangeError('Invalid input for AttrStep.fromJSON')
     return new AttrStep(json.pos, json.attr, json.value)
   }
 }
 
-Step.jsonID("attr", AttrStep)
+Step.jsonID('attr', AttrStep)
 
 /// Update an attribute in the doc node.
 export class DocAttrStep extends Step {
@@ -85,14 +90,13 @@ export class DocAttrStep extends Step {
   }
 
   toJSON(): any {
-    return {stepType: "docAttr", attr: this.attr, value: this.value}
+    return { stepType: 'docAttr', attr: this.attr, value: this.value }
   }
 
   static fromJSON(schema: Schema, json: any) {
-    if (typeof json.attr != "string")
-      throw new RangeError("Invalid input for DocAttrStep.fromJSON")
+    if (typeof json.attr != 'string') throw new RangeError('Invalid input for DocAttrStep.fromJSON')
     return new DocAttrStep(json.attr, json.value)
   }
 }
 
-Step.jsonID("docAttr", DocAttrStep)
+Step.jsonID('docAttr', DocAttrStep)
