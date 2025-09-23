@@ -29,11 +29,20 @@ export interface Mappable {
 const lower16 = 0xffff
 const factor16 = Math.pow(2, 16)
 
-function makeRecover(index: number, offset: number) { return index + offset * factor16 }
-function recoverIndex(value: number) { return value & lower16 }
-function recoverOffset(value: number) { return (value - (value & lower16)) / factor16 }
+function makeRecover(index: number, offset: number) {
+  return index + offset * factor16
+}
+function recoverIndex(value: number) {
+  return value & lower16
+}
+function recoverOffset(value: number) {
+  return (value - (value & lower16)) / factor16
+}
 
-const DEL_BEFORE = 1, DEL_AFTER = 2, DEL_ACROSS = 4, DEL_SIDE = 8
+const DEL_BEFORE = 1,
+  DEL_AFTER = 2,
+  DEL_ACROSS = 4,
+  DEL_SIDE = 8
 
 /// An object representing a mapped position with extra
 /// information.
@@ -51,18 +60,26 @@ export class MapResult {
   /// Tells you whether the position was deleted, that is, whether the
   /// step removed the token on the side queried (via the `assoc`)
   /// argument from the document.
-  get deleted() { return (this.delInfo & DEL_SIDE) > 0 }
+  get deleted() {
+    return (this.delInfo & DEL_SIDE) > 0
+  }
 
   /// Tells you whether the token before the mapped position was deleted.
-  get deletedBefore() { return (this.delInfo & (DEL_BEFORE | DEL_ACROSS)) > 0 }
+  get deletedBefore() {
+    return (this.delInfo & (DEL_BEFORE | DEL_ACROSS)) > 0
+  }
 
   /// True when the token after the mapped position was deleted.
-  get deletedAfter() { return (this.delInfo & (DEL_AFTER | DEL_ACROSS)) > 0 }
+  get deletedAfter() {
+    return (this.delInfo & (DEL_AFTER | DEL_ACROSS)) > 0
+  }
 
   /// Tells whether any of the steps mapped through deletes across the
   /// position (including both the token before and after the
   /// position).
-  get deletedAcross() { return (this.delInfo & DEL_ACROSS) > 0 }
+  get deletedAcross() {
+    return (this.delInfo & DEL_ACROSS) > 0
+  }
 }
 
 /// A map describing the deletions and insertions made by a step, which
@@ -84,23 +101,32 @@ export class StepMap implements Mappable {
 
   /// @internal
   recover(value: number) {
-    let diff = 0, index = recoverIndex(value)
-    if (!this.inverted) for (let i = 0; i < index; i++)
-      diff += this.ranges[i * 3 + 2] - this.ranges[i * 3 + 1]
+    let diff = 0,
+      index = recoverIndex(value)
+    if (!this.inverted)
+      for (let i = 0; i < index; i++) diff += this.ranges[i * 3 + 2] - this.ranges[i * 3 + 1]
     return this.ranges[index * 3] + diff + recoverOffset(value)
   }
 
-  mapResult(pos: number, assoc = 1): MapResult { return this._map(pos, assoc, false) as MapResult }
+  mapResult(pos: number, assoc = 1): MapResult {
+    return this._map(pos, assoc, false) as MapResult
+  }
 
-  map(pos: number, assoc = 1): number { return this._map(pos, assoc, true) as number }
+  map(pos: number, assoc = 1): number {
+    return this._map(pos, assoc, true) as number
+  }
 
   /// @internal
   _map(pos: number, assoc: number, simple: boolean) {
-    let diff = 0, oldIndex = this.inverted ? 2 : 1, newIndex = this.inverted ? 1 : 2
+    let diff = 0,
+      oldIndex = this.inverted ? 2 : 1,
+      newIndex = this.inverted ? 1 : 2
     for (let i = 0; i < this.ranges.length; i += 3) {
       let start = this.ranges[i] - (this.inverted ? diff : 0)
       if (start > pos) break
-      let oldSize = this.ranges[i + oldIndex], newSize = this.ranges[i + newIndex], end = start + oldSize
+      let oldSize = this.ranges[i + oldIndex],
+        newSize = this.ranges[i + newIndex],
+        end = start + oldSize
       if (pos <= end) {
         let side = !oldSize ? assoc : pos == start ? -1 : pos == end ? 1 : assoc
         let result = start + diff + (side < 0 ? 0 : newSize)
@@ -117,12 +143,15 @@ export class StepMap implements Mappable {
 
   /// @internal
   touches(pos: number, recover: number) {
-    let diff = 0, index = recoverIndex(recover)
-    let oldIndex = this.inverted ? 2 : 1, newIndex = this.inverted ? 1 : 2
+    let diff = 0,
+      index = recoverIndex(recover)
+    let oldIndex = this.inverted ? 2 : 1,
+      newIndex = this.inverted ? 1 : 2
     for (let i = 0; i < this.ranges.length; i += 3) {
       let start = this.ranges[i] - (this.inverted ? diff : 0)
       if (start > pos) break
-      let oldSize = this.ranges[i + oldIndex], end = start + oldSize
+      let oldSize = this.ranges[i + oldIndex],
+        end = start + oldSize
       if (pos <= end && i == index * 3) return true
       diff += this.ranges[i + newIndex] - oldSize
     }
@@ -132,10 +161,14 @@ export class StepMap implements Mappable {
   /// Calls the given function on each of the changed ranges included in
   /// this map.
   forEach(f: (oldStart: number, oldEnd: number, newStart: number, newEnd: number) => void) {
-    let oldIndex = this.inverted ? 2 : 1, newIndex = this.inverted ? 1 : 2
+    let oldIndex = this.inverted ? 2 : 1,
+      newIndex = this.inverted ? 1 : 2
     for (let i = 0, diff = 0; i < this.ranges.length; i += 3) {
-      let start = this.ranges[i], oldStart = start - (this.inverted ? diff : 0), newStart = start + (this.inverted ? 0 : diff)
-      let oldSize = this.ranges[i + oldIndex], newSize = this.ranges[i + newIndex]
+      let start = this.ranges[i],
+        oldStart = start - (this.inverted ? diff : 0),
+        newStart = start + (this.inverted ? 0 : diff)
+      let oldSize = this.ranges[i + oldIndex],
+        newSize = this.ranges[i + newIndex]
       f(oldStart, oldStart + oldSize, newStart, newStart + newSize)
       diff += newSize - oldSize
     }
@@ -149,7 +182,7 @@ export class StepMap implements Mappable {
 
   /// @internal
   toString() {
-    return (this.inverted ? "-" : "") + JSON.stringify(this.ranges)
+    return (this.inverted ? '-' : '') + JSON.stringify(this.ranges)
   }
 
   /// Create a map that moves all positions by offset `n` (which may be
@@ -186,7 +219,9 @@ export class Mapping implements Mappable {
   }
 
   /// The step maps in this mapping.
-  get maps(): readonly StepMap[] { return this._maps }
+  get maps(): readonly StepMap[] {
+    return this._maps
+  }
 
   private _maps: StepMap[]
   // False if maps/mirror are shared arrays that we shouldn't mutate
@@ -223,8 +258,9 @@ export class Mapping implements Mappable {
   /// given offset, in this mapping (as per the second argument to
   /// `appendMap`).
   getMirror(n: number): number | undefined {
-    if (this.mirror) for (let i = 0; i < this.mirror.length; i++)
-      if (this.mirror[i] == n) return this.mirror[i + (i % 2 ? -1 : 1)]
+    if (this.mirror)
+      for (let i = 0; i < this.mirror.length; i++)
+        if (this.mirror[i] == n) return this.mirror[i + (i % 2 ? -1 : 1)]
   }
 
   /// @internal
@@ -235,15 +271,22 @@ export class Mapping implements Mappable {
 
   /// Append the inverse of the given mapping to this one.
   appendMappingInverted(mapping: Mapping) {
-    for (let i = mapping.maps.length - 1, totalSize = this._maps.length + mapping._maps.length; i >= 0; i--) {
+    for (
+      let i = mapping.maps.length - 1, totalSize = this._maps.length + mapping._maps.length;
+      i >= 0;
+      i--
+    ) {
       let mirr = mapping.getMirror(i)
-      this.appendMap(mapping._maps[i].invert(), mirr != null && mirr > i ? totalSize - mirr - 1 : undefined)
+      this.appendMap(
+        mapping._maps[i].invert(),
+        mirr != null && mirr > i ? totalSize - mirr - 1 : undefined
+      )
     }
   }
 
   /// Create an inverted version of this mapping.
   invert() {
-    let inverse = new Mapping
+    let inverse = new Mapping()
     inverse.appendMappingInverted(this)
     return inverse
   }
@@ -251,27 +294,31 @@ export class Mapping implements Mappable {
   /// Map a position through this mapping.
   map(pos: number, assoc = 1) {
     if (this.mirror) return this._map(pos, assoc, true) as number
-    for (let i = this.from; i < this.to; i++)
-      pos = this._maps[i].map(pos, assoc)
+    for (let i = this.from; i < this.to; i++) pos = this._maps[i].map(pos, assoc)
     return pos
   }
 
   /// Map a position through this mapping, returning a mapping
   /// result.
-  mapResult(pos: number, assoc = 1) { return this._map(pos, assoc, false) as MapResult }
+  mapResult(pos: number, assoc = 1) {
+    return this._map(pos, assoc, false) as MapResult
+  }
 
   /// @internal
   _map(pos: number, assoc: number, simple: boolean) {
     let delInfo = 0
 
     for (let i = this.from; i < this.to; i++) {
-      let map = this._maps[i], result = map.mapResult(pos, assoc)
+      let map = this._maps[i],
+        result = map.mapResult(pos, assoc)
+      // 1. 检查是否可以“跳过”
       if (result.recover != null) {
-        let corr = this.getMirror(i)
+        let corr = this.getMirror(i) // 2. 查找当前步骤的镜像步骤
         if (corr != null && corr > i && corr < this.to) {
-          i = corr
-          pos = this._maps[corr].recover(result.recover)
-          continue
+          // 3. 如果找到了一个未来的镜像步骤
+          i = corr // 4. 跳过中间的所有步骤，直接快进到镜像步骤
+          pos = this._maps[corr].recover(result.recover) // 5. 使用“面包屑”恢复位置
+          continue // 6. 继续下一轮循环
         }
       }
 
